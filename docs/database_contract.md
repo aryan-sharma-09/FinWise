@@ -69,6 +69,11 @@ One row per current holding.
 | `portfolio_total_value` | portfolio's total market value (repeated per row) |
 | `portfolio_weight_percent` | position weight inside its portfolio |
 
+`cost_basis` is presented rounded to two decimal places (cents); the
+underlying `average_cost_per_unit` is stored with six-decimal precision, so a
+client-side recomputation of `quantity × average_cost_per_unit` may differ by
+a fraction of a cent.
+
 Typical use: position tables, "top holdings", gain/loss screens.
 
 ### `v_sector_allocation`

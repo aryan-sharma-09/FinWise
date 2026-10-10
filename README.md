@@ -49,7 +49,11 @@ fundamentals, and understand portfolio performance and risk.
   API (views + procedures) that Members 2, 3, and 4 build against. Requires
   team review.
 - [`docs/er_diagram.mmd`](docs/er_diagram.mmd) — ER diagram (Mermaid source;
-  render it with the Mermaid VS Code extension or https://mermaid.live).
+  render it with the Mermaid VS Code extension or https://mermaid.live). The
+  file starts directly with the `erDiagram` line so every Mermaid renderer can
+  detect the diagram; it shows key attributes only — the complete column list
+  lives in the data dictionary. Crow's-foot notation: `||--o{` means "one
+  parent row to zero-or-more child rows".
 
 ## Requirements
 

@@ -1,12 +1,3 @@
-# FinWise ER diagram (Mermaid source)
-#
-# Render with:  https://mermaid.live  or the "Markdown Preview Mermaid
-# Support" VS Code extension. Key attributes only - the complete column
-# list lives in docs/data_dictionary.md.
-#
-# Legend for crow's foot notation used below:
-#   ||--o{   exactly one parent  to  zero-or-more children
-
 erDiagram
     USERS ||--o{ PORTFOLIOS : "owns"
     PORTFOLIOS ||--o{ HOLDINGS : "contains"
