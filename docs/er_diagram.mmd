@@ -1,0 +1,79 @@
+# FinWise ER diagram (Mermaid source)
+#
+# Render with:  https://mermaid.live  or the "Markdown Preview Mermaid
+# Support" VS Code extension. Key attributes only - the complete column
+# list lives in docs/data_dictionary.md.
+#
+# Legend for crow's foot notation used below:
+#   ||--o{   exactly one parent  to  zero-or-more children
+
+erDiagram
+    USERS ||--o{ PORTFOLIOS : "owns"
+    PORTFOLIOS ||--o{ HOLDINGS : "contains"
+    STOCKS ||--o{ HOLDINGS : "is held via"
+    PORTFOLIOS ||--o{ TRANSACTIONS : "records"
+    STOCKS ||--o{ TRANSACTIONS : "is traded in"
+    SECTORS ||--o{ STOCKS : "classifies"
+    PORTFOLIOS ||--o{ PORTFOLIO_SNAPSHOTS : "is snapshotted as"
+
+    USERS {
+        int user_id PK
+        varchar username UK "unique"
+        varchar email UK "unique"
+        varchar full_name
+        timestamp created_at
+    }
+
+    PORTFOLIOS {
+        int portfolio_id PK
+        int user_id FK "ON DELETE CASCADE"
+        varchar portfolio_name "unique per user"
+        timestamp created_at
+    }
+
+    SECTORS {
+        int sector_id PK
+        varchar sector_name UK "unique"
+        varchar description "nullable"
+    }
+
+    STOCKS {
+        int stock_id PK
+        varchar ticker_symbol UK "unique, uppercase"
+        varchar company_name
+        int sector_id FK "ON DELETE RESTRICT"
+        decimal current_price "illustrative, as of price_as_of"
+        decimal market_cap_millions "nullable"
+        decimal pe_ratio "nullable, NULL = loss-making"
+        decimal dividend_yield "nullable, percent 0..100"
+        date price_as_of
+    }
+
+    HOLDINGS {
+        int holding_id PK
+        int portfolio_id FK "ON DELETE CASCADE"
+        int stock_id FK "ON DELETE RESTRICT"
+        decimal quantity "CHECK quantity > 0"
+        decimal average_cost_per_unit "weighted average, CHECK > 0"
+        timestamp updated_at
+    }
+
+    TRANSACTIONS {
+        int transaction_id PK
+        int portfolio_id FK "ON DELETE CASCADE"
+        int stock_id FK "ON DELETE RESTRICT"
+        enum transaction_type "BUY or SELL"
+        decimal quantity "CHECK quantity > 0"
+        decimal price_per_unit "CHECK price > 0"
+        datetime transaction_date
+        varchar notes "nullable"
+    }
+
+    PORTFOLIO_SNAPSHOTS {
+        int snapshot_id PK
+        int portfolio_id FK "ON DELETE CASCADE"
+        date snapshot_date "unique per portfolio"
+        decimal total_market_value "CHECK >= 0"
+        decimal total_cost_basis "CHECK >= 0"
+        int holdings_count
+    }
