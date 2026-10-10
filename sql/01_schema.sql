@@ -132,7 +132,7 @@ CREATE TABLE holdings (
   portfolio_id           INT UNSIGNED   NOT NULL,
   stock_id               INT UNSIGNED   NOT NULL,
   quantity               DECIMAL(12,4)  UNSIGNED NOT NULL,
-  average_cost_per_unit  DECIMAL(12,2)  UNSIGNED NOT NULL,
+  average_cost_per_unit  DECIMAL(12,6)  UNSIGNED NOT NULL,
   updated_at             TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP
                                         ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (holding_id),

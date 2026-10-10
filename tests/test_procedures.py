@@ -5,7 +5,7 @@ docs/database_contract.md and implemented by sp_record_transaction /
 sp_rebuild_holdings:
 
     BUY : new_avg = (held_qty * held_avg + qty * price) / (held_qty + qty)
-          rounded to 2 decimals.
+          rounded to 6 decimals.
     SELL: average cost per unit is unchanged; quantity is reduced; a full
           sell-out removes the holding row entirely.
 

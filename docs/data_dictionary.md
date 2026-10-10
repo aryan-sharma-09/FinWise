@@ -100,7 +100,7 @@ portfolio name, one user may not duplicate their own.
 | `portfolio_id` | `INT UNSIGNED` | no | — | → `portfolios.portfolio_id` (`ON DELETE CASCADE`) |
 | `stock_id` | `INT UNSIGNED` | no | — | → `stocks.stock_id` (`ON DELETE RESTRICT`) |
 | `quantity` | `DECIMAL(12,4) UNSIGNED` | no | — | Shares held, `> 0` (fractional allowed) |
-| `average_cost_per_unit` | `DECIMAL(12,2) UNSIGNED` | no | — | Weighted-average cost, `> 0` |
+| `average_cost_per_unit` | `DECIMAL(12,6) UNSIGNED` | no | — | Weighted-average cost, `> 0`; stored with 6 decimals (a 2-decimal average cannot reconstruct cost basis exactly) |
 | `updated_at` | `TIMESTAMP` | no | `CURRENT_TIMESTAMP` on update | Last maintenance time |
 
 **Constraints:** `UNIQUE (portfolio_id, stock_id)`; `CHECK (quantity > 0)`;
@@ -180,10 +180,16 @@ portfolio name, one user may not duplicate their own.
 
 ```
 BUY : new_avg = ROUND((held_qty * held_avg + qty * price)
-                      / (held_qty + qty), 2)
+                      / (held_qty + qty), 6)
 SELL: average_cost_per_unit unchanged; quantity reduced;
       a full sell-out DELETES the holding row.
 ```
+
+The average is stored with **6 decimal places**, not cents: a 2-decimal
+average cannot reconstruct cost basis exactly (e.g. for 10 @ $100 plus
+5 @ $120 the true average is 106.6667, but 15 x 106.67 = 1600.05
+instead of 1600.00). With 6 decimals the drift stays below half a cent
+for positions up to ~15,000 units.
 
 Worked example (asserted in `tests/test_procedures.py`):
 

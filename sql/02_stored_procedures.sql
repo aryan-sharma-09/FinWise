@@ -66,8 +66,8 @@ CREATE PROCEDURE sp_record_transaction (
 proc: BEGIN
     DECLARE v_exists         INT UNSIGNED DEFAULT 0;
     DECLARE v_held_quantity  DECIMAL(12,4);
-    DECLARE v_avg_cost       DECIMAL(12,2);
-    DECLARE v_new_avg_cost   DECIMAL(12,4);
+    DECLARE v_avg_cost       DECIMAL(12,6);
+    DECLARE v_new_avg_cost   DECIMAL(14,6);
 
     -- Any SQL error (including the SIGNALs below) rolls back everything
     -- and re-raises the original message to the client.
@@ -153,7 +153,7 @@ proc: BEGIN
 
             UPDATE holdings
                SET quantity              = quantity + p_quantity,
-                   average_cost_per_unit = ROUND(v_new_avg_cost, 2)
+                   average_cost_per_unit = ROUND(v_new_avg_cost, 6)
              WHERE portfolio_id = p_portfolio_id
                AND stock_id     = p_stock_id;
         END IF;
@@ -288,7 +288,7 @@ BEGIN
     DECLARE v_tx_price DECIMAL(12,2);
     DECLARE v_cur_stock INT UNSIGNED DEFAULT NULL;
     DECLARE v_qty      DECIMAL(12,4) DEFAULT 0;
-    DECLARE v_avg      DECIMAL(12,2) DEFAULT 0;
+    DECLARE v_avg      DECIMAL(14,6) DEFAULT 0;
 
     DECLARE cur_tx CURSOR FOR
         SELECT stock_id, transaction_type, quantity, price_per_unit
@@ -337,7 +337,7 @@ BEGIN
 
         IF v_tx_type = 'BUY' THEN
             SET v_avg = ROUND((v_qty * v_avg + v_tx_qty * v_tx_price)
-                              / (v_qty + v_tx_qty), 2),
+                              / (v_qty + v_tx_qty), 6),
                 v_qty = v_qty + v_tx_qty;
         ELSE
             -- Sale: average cost per unit is unchanged.

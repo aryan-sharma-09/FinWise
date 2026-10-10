@@ -165,13 +165,18 @@ def record_transaction(
     """
     cur = conn.cursor()
     try:
-        cur.callproc(
-            "sp_record_transaction",
-            [portfolio_id, stock_id, transaction_type,
-             quantity, price_per_unit, transaction_date, notes, 0],
+        # Bind the IN parameters and carry the OUT value in a session
+        # variable of our own naming. This does not depend on the
+        # connector's callproc() user-variable naming convention, which
+        # differs between mysql-connector-python versions (8.x used
+        # "@_<proc>_<index>", 26.x uses "@_<proc>_arg<index+1>").
+        cur.execute(
+            "CALL sp_record_transaction("
+            "%s, %s, %s, %s, %s, %s, %s, @p_transaction_id)",
+            (portfolio_id, stock_id, transaction_type,
+             quantity, price_per_unit, transaction_date, notes),
         )
-        # Retrieve the OUT parameter p_transaction_id (8th argument).
-        cur.execute("SELECT @_sp_record_transaction_8")
+        cur.execute("SELECT @p_transaction_id")
         (transaction_id,) = cur.fetchone()
         conn.commit()
         return int(transaction_id)

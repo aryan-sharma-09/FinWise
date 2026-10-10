@@ -24,15 +24,15 @@ from conftest import q, q1, scalar, stock_id_by_ticker
 import db as _db
 
 
-def test_seed_reconciliation_is_empty(db_conn):
+def test_seed_reconciliation_is_empty(pristine_db):
     """The master invariant: stored holdings == transaction-derived holdings."""
-    rows = q(db_conn, "SELECT * FROM v_holdings_reconciliation")
+    rows = q(pristine_db, "SELECT * FROM v_holdings_reconciliation")
     assert rows == [], (
         f"holdings and transactions drifted out of sync: {rows}"
     )
 
 
-def test_seed_row_counts(db_conn):
+def test_seed_row_counts(pristine_db):
     """The documented seed shape (also asserted by verify_setup.py)."""
     expected = {
         "users": 6,
@@ -44,7 +44,7 @@ def test_seed_row_counts(db_conn):
         "portfolio_snapshots": 52,
     }
     for table, count in expected.items():
-        actual = int(scalar(db_conn, f"SELECT COUNT(*) FROM {table}"))
+        actual = int(scalar(pristine_db, f"SELECT COUNT(*) FROM {table}"))
         assert actual == count, f"{table}: expected {count}, found {actual}"
 
 
@@ -102,15 +102,21 @@ def test_sector_weights_sum_to_100(db_conn):
 
 
 def test_positions_view_matches_direct_computation(db_conn):
-    """v_portfolio_positions totals equal a direct holdings x price query."""
+    """v_portfolio_positions totals equal a direct holdings x price query.
+
+    The direct query mirrors the view's per-position money formulas
+    (ROUND(..., 2) per holding) - the view presents money in cents, and
+    with 6-decimal average costs the raw products can carry fractions
+    of a cent that the view rounds away per position.
+    """
     view_rows = q(db_conn,
                   "SELECT portfolio_id, SUM(market_value) AS view_value, "
                   "       SUM(cost_basis) AS view_cost "
                   "FROM v_portfolio_positions GROUP BY portfolio_id")
     direct_rows = q(db_conn,
                     "SELECT h.portfolio_id, "
-                    "        SUM(h.quantity * s.current_price) AS direct_value, "
-                    "        SUM(h.quantity * h.average_cost_per_unit) AS direct_cost "
+                    "        SUM(ROUND(h.quantity * s.current_price, 2)) AS direct_value, "
+                    "        SUM(ROUND(h.quantity * h.average_cost_per_unit, 2)) AS direct_cost "
                     "FROM holdings h JOIN stocks s ON s.stock_id = h.stock_id "
                     "GROUP BY h.portfolio_id")
     direct = {r["portfolio_id"]: r for r in direct_rows}
@@ -153,15 +159,15 @@ def test_performance_view_links_consecutive_snapshots(db_conn):
         assert cur["previous_market_value"] == prev["total_market_value"]
 
 
-def test_latest_snapshot_matches_current_positions(db_conn):
+def test_latest_snapshot_matches_current_positions(pristine_db):
     """The 2026-10-10 snapshot (created by sp_create_snapshot from seeded
     holdings x current prices) must equal the live positions view total for
     every portfolio - the computed present is consistent with holdings."""
     snapshots = {r["portfolio_id"]: r for r in q(
-        db_conn,
+        pristine_db,
         "SELECT portfolio_id, total_market_value FROM portfolio_snapshots "
         "WHERE snapshot_date = '2026-10-10'")}
-    live = q(db_conn,
+    live = q(pristine_db,
              "SELECT portfolio_id, SUM(market_value) AS total "
              "FROM v_portfolio_positions GROUP BY portfolio_id")
     assert len(snapshots) == 7

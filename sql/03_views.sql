@@ -183,7 +183,12 @@ LEFT JOIN portfolio_snapshots prev
 --   this view starts empty, and the test suite asserts it stays empty.
 --
 --   Row meanings:
---     stored_quantity IS NULL      -> transactions exist but no holding row
+--     stored_quantity IS NULL, derived_quantity <> 0
+--                                  -> transactions exist but no holding row
+--     stored_quantity IS NULL, derived_quantity = 0
+--                                  -> NOT flagged: a completed full sell-out
+--                                     (log nets to zero; the holding row was
+--                                     correctly removed by the procedure)
 --     derived_quantity IS NULL     -> holding row exists without any
 --                                     transactions (impossible via procedures)
 --     both present                 -> quantities disagree
@@ -209,7 +214,7 @@ FROM (
 LEFT JOIN holdings h
        ON h.portfolio_id = d.portfolio_id
       AND h.stock_id     = d.stock_id
-WHERE h.holding_id IS NULL
+WHERE (h.holding_id IS NULL AND ROUND(d.derived_quantity, 4) <> 0)
    OR ROUND(d.derived_quantity, 4) <> ROUND(h.quantity, 4)
 UNION
 SELECT

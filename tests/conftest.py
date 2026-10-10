@@ -5,6 +5,12 @@ configurable via FINWISE_TEST_DB_NAME) that is created fresh from the SQL
 scripts at the start of every session and dropped afterwards. Your demo
 database is never touched.
 
+Tests that assert the documented SEED SHAPE (row counts, seed invariants)
+use the `pristine_db` fixture instead of `db_conn`: it rebuilds the
+throwaway database from the SQL scripts first, so those assertions are
+independent of test execution order (other tests commit their own setup
+data through the procedures, by design).
+
 Safety guards:
   * The test database name must contain the word "test", otherwise the run
     aborts instead of dropping something important.
@@ -41,6 +47,32 @@ if "test" not in TEST_DB.lower():
 SQL_FILES = [load_database.SQL_DIR / f for f in load_database.DEFAULT_FILES]
 
 
+def _drop_test_db() -> None:
+    """Remove the throwaway database if it exists (best effort)."""
+    try:
+        server = db.get_server_connection()
+        cur = server.cursor()
+        cur.execute(f"DROP DATABASE IF EXISTS `{TEST_DB}`")
+        server.commit()
+        server.close()
+    except Exception:
+        pass
+
+
+def _drop_and_build_test_db() -> None:
+    """(Re)create the throwaway database from the SQL scripts."""
+    server = db.get_server_connection()
+    try:
+        cur = server.cursor()
+        cur.execute(f"DROP DATABASE IF EXISTS `{TEST_DB}`")
+        server.commit()
+        cur.close()
+        load_database.ensure_database(server, TEST_DB)
+        load_database.load_sql_files(server, SQL_FILES, verbose=False)
+    finally:
+        server.close()
+
+
 # ---------------------------------------------------------------------------
 # Session-scoped: build the throwaway database from the SQL scripts.
 # ---------------------------------------------------------------------------
@@ -53,32 +85,16 @@ def test_db_name():
         pytest.skip("FINWISE_DB_PASSWORD is not set - copy .env.example to "
                     ".env and fill in your MySQL password (see README)")
     try:
-        server = db.get_server_connection()
+        db.get_server_connection().close()
     except Exception as exc:
         pytest.skip(f"Could not connect to MySQL ({exc}). Start the server "
                     "and check your .env configuration.")
 
-    try:
-        cur = server.cursor()
-        cur.execute(f"DROP DATABASE IF EXISTS `{TEST_DB}`")
-        server.commit()
-        cur.close()
-        load_database.ensure_database(server, TEST_DB)
-        load_database.load_sql_files(server, SQL_FILES, verbose=False)
-    finally:
-        server.close()
-
+    _drop_and_build_test_db()
     yield TEST_DB
 
     # Teardown: remove the throwaway database.
-    try:
-        server = db.get_server_connection()
-        cur = server.cursor()
-        cur.execute(f"DROP DATABASE IF EXISTS `{TEST_DB}`")
-        server.commit()
-        server.close()
-    except Exception:
-        pass
+    _drop_test_db()
 
 
 # ---------------------------------------------------------------------------
@@ -87,6 +103,21 @@ def test_db_name():
 @pytest.fixture()
 def db_conn(test_db_name):
     conn = db.get_connection(database=test_db_name)
+    yield conn
+    conn.rollback()
+    conn.close()
+
+
+# ---------------------------------------------------------------------------
+# Function-scoped PRISTINE database connection: for tests that assert the
+# documented seed shape. The throwaway database is rebuilt from the SQL
+# scripts first, so committed setup data from earlier tests cannot affect
+# these assertions.
+# ---------------------------------------------------------------------------
+@pytest.fixture()
+def pristine_db(test_db_name):
+    _drop_and_build_test_db()
+    conn = db.get_connection(database=TEST_DB)
     yield conn
     conn.rollback()
     conn.close()
