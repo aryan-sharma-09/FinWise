@@ -6,6 +6,8 @@
 --            holdings / transactions / snapshots ONLY through these
 --            procedures.
 --  Requires: MySQL 8.0.16 or newer.
+--  Reload  : Each procedure is DROPped before creation, so this file
+--            is safe to re-run against an existing database.
 --  Safety  : All procedures validate their input, run inside explicit
 --            transactions, and roll back completely on any error, so a
 --            rejected operation leaves neither a partial transaction row
@@ -29,6 +31,13 @@
 --    two sessions trade in the same portfolio at the same time. Writes to
 --    different portfolios proceed in parallel.
 -- =============================================================================
+
+-- Drop any existing procedures so this file can be re-run safely
+-- (MySQL has no CREATE OR REPLACE PROCEDURE). These statements sit
+-- OUTSIDE the DELIMITER $$ block so they split as normal statements.
+DROP PROCEDURE IF EXISTS sp_record_transaction;
+DROP PROCEDURE IF EXISTS sp_create_snapshot;
+DROP PROCEDURE IF EXISTS sp_rebuild_holdings;
 
 DELIMITER $$
 
