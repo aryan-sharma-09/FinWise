@@ -209,3 +209,37 @@ def test_stock_delete_restricted_while_referenced(db_conn):
         _db.execute(db_conn, "DELETE FROM stocks WHERE stock_id = %s", (aapl,))
     assert q1(db_conn, "SELECT ticker_symbol FROM stocks WHERE stock_id = %s",
               (aapl,))["ticker_symbol"] == "AAPL"
+
+
+def test_portfolio_delete_cascades_to_children(db_conn):
+    """ON DELETE CASCADE: removing a PORTFOLIO removes its holdings,
+    transactions, and snapshots (the CRUD demo's option 8)."""
+    import db as _db
+    user_id = new_user(db_conn, "pcascade")
+    portfolio_id = new_portfolio(db_conn, user_id)
+    stock_id = stock_id_by_ticker(db_conn, "KO")
+    _db.record_transaction(db_conn, portfolio_id, stock_id, "BUY",
+                           10, 50.00, "2026-01-05 10:00:00")
+    _db.create_snapshot(db_conn, portfolio_id, "2026-01-06")
+
+    _db.execute(db_conn, "DELETE FROM portfolios WHERE portfolio_id = %s",
+                (portfolio_id,))
+
+    for table in ("portfolios", "holdings", "transactions",
+                  "portfolio_snapshots"):
+        assert scalar(db_conn, f"SELECT COUNT(*) FROM {table} "
+                               f"WHERE portfolio_id = %s",
+                      (portfolio_id,)) == 0, table
+    # The user survives: the cascade stops at their portfolio.
+    assert scalar(db_conn, "SELECT COUNT(*) FROM users WHERE user_id = %s",
+                  (user_id,)) == 1
+
+
+def test_sector_delete_restricted_while_referenced(db_conn):
+    """ON DELETE RESTRICT: a sector still referenced by stocks cannot be
+    deleted (sectors 1-8 are all referenced by the seed)."""
+    import db as _db
+    with pytest.raises(_db.MySQLError):
+        _db.execute(db_conn, "DELETE FROM sectors WHERE sector_id = 1")
+    assert scalar(db_conn, "SELECT COUNT(*) FROM sectors "
+                           "WHERE sector_id = 1") == 1

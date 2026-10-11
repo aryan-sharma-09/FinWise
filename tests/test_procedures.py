@@ -234,6 +234,32 @@ def test_snapshot_same_day_is_idempotent_upsert(db_conn, fresh_portfolio):
     assert snap["total_cost_basis"] == Decimal("1600.00")
 
 
+def test_snapshot_repeated_with_same_values_is_idempotent(db_conn, fresh_portfolio):
+    """Regression (duplicate-key 1062): snapshotting twice with NOTHING
+    changed between the calls must be a no-op refresh, not an insert.
+    The old UPDATE-then-INSERT-if-ROW_COUNT()=0 logic failed here because
+    MySQL's ROW_COUNT() counts CHANGED rows, so when the recomputed
+    values equalled the stored ones the UPDATE matched but changed 0
+    rows and the procedure fell through to the INSERT."""
+    portfolio_id, stock_id = fresh_portfolio
+    _db.record_transaction(db_conn, portfolio_id, stock_id, "BUY",
+                           10, 100.00, DATE)
+    _db.create_snapshot(db_conn, portfolio_id, "2026-01-10")
+    _db.create_snapshot(db_conn, portfolio_id, "2026-01-10")  # same values
+
+    n = int(scalar(db_conn,
+                   "SELECT COUNT(*) FROM portfolio_snapshots "
+                   "WHERE portfolio_id = %s AND snapshot_date = '2026-01-10'",
+                   (portfolio_id,)))
+    assert n == 1  # refreshed, never duplicated
+
+    snap = q1(db_conn,
+              "SELECT total_cost_basis FROM portfolio_snapshots "
+              "WHERE portfolio_id = %s AND snapshot_date = '2026-01-10'",
+              (portfolio_id,))
+    assert snap["total_cost_basis"] == Decimal("1000.00")
+
+
 def test_snapshot_empty_portfolio_records_zeros(db_conn):
     user_id = new_user(db_conn, "empty")
     portfolio_id = new_portfolio(db_conn, user_id)

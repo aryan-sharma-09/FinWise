@@ -23,6 +23,11 @@
 --     sql/05_analytics_queries.sql.
 --   - Division-by-zero is impossible by construction: CHECK constraints
 --     guarantee quantity > 0, average_cost_per_unit > 0, and prices > 0.
+--   - Money DIFFERENCES (unrealized P/L, period-over-period changes) are
+--     computed through CAST to signed DECIMAL. The underlying columns are
+--     UNSIGNED (their values are never negative) but their differences
+--     legitimately are; plain unsigned subtraction would raise
+--     "1690 DECIMAL UNSIGNED value is out of range" on any loss.
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
@@ -47,8 +52,10 @@ SELECT
     s.current_price,
     ROUND(h.quantity * h.average_cost_per_unit, 2)                    AS cost_basis,
     ROUND(h.quantity * s.current_price, 2)                             AS market_value,
-    ROUND(h.quantity * (s.current_price - h.average_cost_per_unit), 2) AS unrealized_pl,
-    ROUND(100 * (s.current_price - h.average_cost_per_unit)
+    ROUND(h.quantity * (CAST(s.current_price AS DECIMAL(14,2)) -
+                        CAST(h.average_cost_per_unit AS DECIMAL(14,6))), 2) AS unrealized_pl,
+    ROUND(100 * (CAST(s.current_price AS DECIMAL(14,2)) -
+                  CAST(h.average_cost_per_unit AS DECIMAL(14,6)))
                 / h.average_cost_per_unit, 2)                          AS pl_percent,
     t.portfolio_total_value,
     ROUND(100 * h.quantity * s.current_price / t.portfolio_total_value, 2)
@@ -153,11 +160,13 @@ SELECT
     prev.total_market_value AS previous_market_value,
     CASE
         WHEN prev.total_market_value IS NULL THEN NULL
-        ELSE ROUND(ps.total_market_value - prev.total_market_value, 2)
+        ELSE ROUND(CAST(ps.total_market_value AS DECIMAL(18,2)) -
+                   CAST(prev.total_market_value AS DECIMAL(18,2)), 2)
     END AS change_value,
     CASE
         WHEN prev.total_market_value IS NULL OR prev.total_market_value = 0 THEN NULL
-        ELSE ROUND(100 * (ps.total_market_value - prev.total_market_value)
+        ELSE ROUND(100 * (CAST(ps.total_market_value AS DECIMAL(18,2)) -
+                          CAST(prev.total_market_value AS DECIMAL(18,2)))
                         / prev.total_market_value, 2)
     END AS change_percent
 FROM portfolio_snapshots ps

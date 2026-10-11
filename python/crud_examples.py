@@ -143,6 +143,9 @@ def add_user(conn) -> None:
     username = ask("Username")
     email = ask("Email")
     full_name = ask("Full name")
+    if not (username and email and full_name):
+        print("  All fields are required - nothing was created.")
+        return
     try:
         user_id = db.execute(
             conn,
@@ -158,6 +161,11 @@ def rename_portfolio(conn) -> None:
     portfolio_id = ask_int("Portfolio id")
     new_name = ask("New name")
     try:
+        if db.fetch_one(conn, "SELECT portfolio_id FROM portfolios "
+                              "WHERE portfolio_id = %s",
+                        (portfolio_id,)) is None:
+            print(f"  No portfolio with id {portfolio_id} - nothing changed.")
+            return
         db.execute(
             conn,
             "UPDATE portfolios SET portfolio_name = %s WHERE portfolio_id = %s",
@@ -170,6 +178,15 @@ def rename_portfolio(conn) -> None:
 
 def delete_portfolio(conn) -> None:
     portfolio_id = ask_int("Portfolio id to delete")
+    try:
+        if db.fetch_one(conn, "SELECT portfolio_id FROM portfolios "
+                              "WHERE portfolio_id = %s",
+                        (portfolio_id,)) is None:
+            print(f"  No portfolio with id {portfolio_id} - nothing deleted.")
+            return
+    except Exception as exc:
+        show_error(exc)
+        return
     confirm = ask(f"Type YES to permanently delete portfolio {portfolio_id} "
                   "and ALL its holdings, transactions and snapshots")
     if confirm != "YES":

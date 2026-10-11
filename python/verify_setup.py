@@ -4,7 +4,8 @@
 Verifies, in order:
   1. The MySQL server version is 8.0.16+ (CHECK constraints are required).
   2. All seven tables exist and contain the expected seed row counts.
-  3. All five contract views are queryable.
+  3. All five contract views evaluate fully - every computed column
+     (P/L, change values, weights) is probed over every row.
   4. v_holdings_reconciliation is empty (holdings match the transaction log).
 
 Exit code 0 = passed, 1 = problems found. Run after loading the database:
@@ -31,13 +32,28 @@ EXPECTED_COUNTS = {
     "portfolio_snapshots": 52,
 }
 
-VIEWS = [
-    "v_portfolio_positions",
-    "v_sector_allocation",
-    "v_user_summary",
-    "v_portfolio_performance",
-    "v_holdings_reconciliation",
-]
+# Deep probes per contract view. MIN/MAX force the server to evaluate the
+# view's COMPUTED columns for every row - a plain COUNT(*) lets the
+# optimizer prune unreferenced expressions, which is exactly how the
+# unsigned-arithmetic bugs (error 1690 on negative P/L and period
+# changes) hid from an earlier version of this health check.
+VIEW_PROBES = {
+    "v_portfolio_positions":
+        "SELECT MIN(unrealized_pl), MAX(unrealized_pl), "
+        "MIN(pl_percent), MAX(pl_percent) FROM v_portfolio_positions",
+    "v_sector_allocation":
+        "SELECT MIN(sector_weight_percent), MAX(sector_weight_percent) "
+        "FROM v_sector_allocation",
+    "v_user_summary":
+        "SELECT MIN(total_unrealized_pl), MAX(total_unrealized_pl) "
+        "FROM v_user_summary",
+    "v_portfolio_performance":
+        "SELECT MIN(change_value), MAX(change_value), "
+        "MIN(change_percent), MAX(change_percent) "
+        "FROM v_portfolio_performance",
+    "v_holdings_reconciliation":
+        "SELECT COUNT(*) AS n FROM v_holdings_reconciliation",
+}
 
 problems: list[str] = []
 
@@ -78,11 +94,11 @@ def check_tables(conn) -> None:
 
 
 def check_views(conn) -> None:
-    print("\n3. Contract views:")
-    for view in VIEWS:
+    print("\n3. Contract views (all computed columns evaluated over every row):")
+    for view, probe in VIEW_PROBES.items():
         try:
-            db.fetch_one(conn, f"SELECT COUNT(*) AS n FROM {view}")
-            ok(f"{view} is queryable")
+            db.fetch_one(conn, probe)
+            ok(f"{view} evaluates fully")
         except Exception as exc:
             fail(f"{view} is missing or broken: {exc}")
 

@@ -272,9 +272,10 @@ SELECT portfolio_id,
        total_market_value,
        LAG(total_market_value) OVER (PARTITION BY portfolio_id
                                      ORDER BY snapshot_date) AS previous_value,
-       ROUND(total_market_value -
-             LAG(total_market_value) OVER (PARTITION BY portfolio_id
-                                           ORDER BY snapshot_date), 2) AS change_value
+       ROUND(CAST(total_market_value AS DECIMAL(18,2)) -
+             CAST(LAG(total_market_value) OVER (PARTITION BY portfolio_id
+                                               ORDER BY snapshot_date)
+                  AS DECIMAL(18,2)), 2) AS change_value
 FROM portfolio_snapshots
 WHERE portfolio_id = 1
 ORDER BY snapshot_date;

@@ -38,8 +38,12 @@ fundamentals, and understand portfolio performance and risk.
 - Python integration: a secure connection helper (credentials via `.env`,
   never in source code), a cross-platform database loader, CRUD examples that
   write **only** through the stored procedures, and a verification script.
-- A pytest suite covering schema constraints, procedure behavior, weighted
-  -average cost math, and holdings/transactions reconciliation.
+- A pytest suite covering schema constraints, referential integrity and
+  cascade deletes, procedure behavior with atomicity checks (rejected
+  operations leave no partial state), weighted-average cost math, signed
+  arithmetic (losing positions and performance decreases),
+  holdings/transactions reconciliation, invalid-input handling, and
+  the CRUD demo menu (options 0-10) via scripted integration tests.
 
 ## Documentation for teammates
 
@@ -92,7 +96,9 @@ FinWise/
 │   ├── conftest.py
 │   ├── test_schema.py
 │   ├── test_procedures.py
-│   └── test_reconciliation.py
+│   ├── test_reconciliation.py
+│   ├── test_signed_arithmetic.py
+│   └── test_menu_integration.py
 └── docs/
     ├── data_dictionary.md
     ├── database_contract.md   ← DRAFT: requires team review

@@ -251,18 +251,27 @@ BEGIN
       JOIN stocks s ON s.stock_id = h.stock_id
      WHERE h.portfolio_id = p_portfolio_id;
 
-    UPDATE portfolio_snapshots
-       SET total_market_value = v_value,
-           total_cost_basis   = v_cost,
-           holdings_count     = v_count
+    -- Idempotent upsert. Existence is checked EXPLICITLY rather than
+    -- via ROW_COUNT(): after an UPDATE, ROW_COUNT() counts rows CHANGED
+    -- (not matched), so the previous UPDATE-then-INSERT-if-ROW_COUNT()-=0
+    -- logic spuriously inserted - and failed with a duplicate-key error -
+    -- whenever a repeated snapshot computed the SAME values as stored.
+    SELECT COUNT(*) INTO v_exists FROM portfolio_snapshots
      WHERE portfolio_id  = p_portfolio_id
        AND snapshot_date = p_snapshot_date;
 
-    IF ROW_COUNT() = 0 THEN
+    IF v_exists = 0 THEN
         INSERT INTO portfolio_snapshots
             (portfolio_id, snapshot_date, total_market_value, total_cost_basis, holdings_count)
         VALUES
             (p_portfolio_id, p_snapshot_date, v_value, v_cost, v_count);
+    ELSE
+        UPDATE portfolio_snapshots
+           SET total_market_value = v_value,
+               total_cost_basis   = v_cost,
+               holdings_count     = v_count
+         WHERE portfolio_id  = p_portfolio_id
+           AND snapshot_date = p_snapshot_date;
     END IF;
 
     COMMIT;
