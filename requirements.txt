@@ -3,3 +3,7 @@
 mysql-connector-python>=8.2
 python-dotenv>=1.0
 pytest>=7.4
+
+# MongoDB module (Member 3). The driver is imported lazily, so the rest of
+# the project keeps working even if it is not installed.
+pymongo>=4.6

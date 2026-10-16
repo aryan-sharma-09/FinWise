@@ -34,6 +34,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "python"))
 
 import db  # noqa: E402
 import load_database  # noqa: E402
+import mongo_db  # noqa: E402
 
 TEST_DB = os.environ.get("FINWISE_TEST_DB_NAME",
                          db.DEFAULTS["FINWISE_TEST_DB_NAME"])
@@ -42,6 +43,18 @@ if "test" not in TEST_DB.lower():
     raise pytest.UsageError(
         f"FINWISE_TEST_DB_NAME must contain the word 'test' (got {TEST_DB!r}). "
         "Refusing to run tests against a database that might hold real data."
+    )
+
+# The MongoDB read-model data model tests use their own throwaway database.
+# The same safety rule applies: its name MUST contain "test".
+MONGO_TEST_DB = os.environ.get("FINWISE_MONGO_TEST_DB",
+                               mongo_db.DEFAULTS["FINWISE_MONGO_TEST_DB"])
+
+if "test" not in MONGO_TEST_DB.lower():
+    raise pytest.UsageError(
+        f"FINWISE_MONGO_TEST_DB must contain the word 'test' (got "
+        f"{MONGO_TEST_DB!r}). Refusing to drop a MongoDB database that might "
+        "hold real data."
     )
 
 SQL_FILES = [load_database.SQL_DIR / f for f in load_database.DEFAULT_FILES]
@@ -182,3 +195,46 @@ def holding(conn, portfolio_id: int, stock_id: int):
         "FROM holdings WHERE portfolio_id = %s AND stock_id = %s",
         (portfolio_id, stock_id),
     )
+
+
+# ---------------------------------------------------------------------------
+# MongoDB fixtures (Member 3). They follow the same philosophy as the MySQL
+# fixtures above: use a throwaway database whose name contains "test", and
+# SKIP cleanly (never fail) when pymongo or the server is unavailable.
+# ---------------------------------------------------------------------------
+def _mongo_skip_reason():
+    """Return a human-readable reason to skip, or None when Mongo is usable."""
+    if mongo_db.pymongo is None:
+        return ("pymongo is not installed "
+                "(run: pip install -r requirements.txt)")
+    if not mongo_db.server_available():
+        return ("MongoDB is not reachable. Start MongoDB or set "
+                "FINWISE_MONGO_URI in .env (see docs/mongodb_module.md).")
+    return None
+
+
+@pytest.fixture(scope="session")
+def mongo_client():
+    """Session-scoped client to the throwaway MongoDB test database."""
+    reason = _mongo_skip_reason()
+    if reason:
+        pytest.skip(reason)
+    client = mongo_db.get_client()
+    yield client
+    try:
+        client.drop_database(MONGO_TEST_DB)
+    finally:
+        client.close()
+
+
+@pytest.fixture()
+def mongo_db_conn(mongo_client):
+    """Function-scoped, EMPTY throwaway MongoDB database.
+
+    Dropped before and after each test, so MongoDB tests are independent of
+    one another and can never leak into the read model of the demo database.
+    """
+    mongo_client.drop_database(MONGO_TEST_DB)
+    database = mongo_client[MONGO_TEST_DB]
+    yield database
+    mongo_client.drop_database(MONGO_TEST_DB)

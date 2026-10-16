@@ -241,4 +241,17 @@ tx_id = record_transaction(conn, pid, sid, "BUY", 10, 245.50, "2026-10-12 10:30:
    portfolio per user)?
 5. Any naming clashes with your planned code (table/view names)?
 
+## 9. MongoDB read model (additive, Member 3)
+
+FinWise also provides a **read-only MongoDB read model** of the data
+(`docs/mongodb_module.md`). It does **not** change anything in this contract:
+
+- The ETL (`python/load_mongo.py`) only **SELECTs** from the views/tables
+  above and writes to MongoDB. It never writes back, so the "writes go
+  through the procedures" rule (§2.1) is unchanged.
+- The views and procedures above remain the only read/write API for MySQL.
+- The MongoDB collections (`stock_fundamentals`, `portfolios`,
+  `transactions`, `portfolio_snapshots`) are disposable and can be rebuilt
+  from MySQL at any time.
+
 — End of DRAFT v0.1 —
