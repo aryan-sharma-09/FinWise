@@ -7,3 +7,7 @@ numpy
 pandas
 scipy
 pytest
+
+# MongoDB module (Person 3). PyMongo is only used by the mongodb/ and etl/
+# scripts, so the MySQL side of the project works without it.
+pymongo>=4.6
