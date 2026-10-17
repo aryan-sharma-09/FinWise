@@ -8,6 +8,6 @@ pandas
 scipy
 pytest
 
-# MongoDB module (Person 3). PyMongo is imported lazily by python/mongo_db.py,
-# so the rest of the project keeps working even if it is not installed.
+# MongoDB module (Person 3). PyMongo is only used by the mongodb/ and etl/
+# scripts, so the MySQL side of the project works without it.
 pymongo>=4.6

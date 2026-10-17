@@ -1,35 +1,50 @@
 #!/usr/bin/env python3
-"""Load the FinWise MongoDB read model from MySQL - a small ETL script.
+"""Load the FinWise MongoDB collections from MySQL - a small ETL script.
+
+This is the INTEGRATION part of Person 3's work. It copies data out of
+Member 1's MySQL database into the MongoDB collections.
 
 ETL stands for Extract, Transform, Load:
-  * Extract   - run read-only SELECTs against the FinWise MySQL database.
+  * Extract   - read the data out of MySQL (four SELECTs).
   * Transform - turn each SQL row into a MongoDB document (a Python dict).
   * Load      - write those documents into the MongoDB collections.
 
 MySQL is the single source of truth. This script only ever READS MySQL and
-WRITES MongoDB - it never modifies MySQL. Re-run it any time to rebuild the
-read model:
+WRITES MongoDB, so it is safe to run again at any time and cannot corrupt
+MySQL. Running it twice gives exactly the same result as running it once.
 
-    python python/load_mongo.py --yes
+Run it with:
+
+    python etl/load_mongo.py
 
 Every value is synthetic sample data - not real financial information.
+
+Contents
+  Q_STOCK_FUNDAMENTALS  - stocks, joined to their sector
+  Q_PORTFOLIOS          - portfolios, joined to their owner
+  Q_TRANSACTIONS        - transactions, joined to their ticker symbol
+  Q_SNAPSHOTS           - portfolio snapshot rows
+  to_float, to_text     - turn MySQL values into MongoDB-friendly values
+  build_*_documents     - turn rows into documents, one function per collection
+  load_collection       - replace one collection with a list of documents
+  main                  - runs Extract, then Transform + Load
 """
 
-from __future__ import annotations
-
-import argparse
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+# Let this script import db.py (Member 1's MySQL helpers, in python/) and
+# mongo_db.py (the MongoDB connection helper, in mongodb/).
+HERE = Path(__file__).resolve().parent
+PROJECT_ROOT = HERE.parent
+sys.path.insert(0, str(PROJECT_ROOT / "python"))
+sys.path.insert(0, str(PROJECT_ROOT / "mongodb"))
 
-import db  # noqa: E402  (local module, path set above)
-import mongo_db  # noqa: E402
+import db
+import mongo_db
 
 # ---------------------------------------------------------------------------
-# EXTRACT - one plain, parameter-free SELECT per collection. The database
-# contract allows custom parameterized SELECTs against base tables like
-# these; the views are for the hand-joined analytics we do not need here.
+# EXTRACT - one plain SELECT per collection. Each one only reads MySQL.
 # ---------------------------------------------------------------------------
 Q_STOCK_FUNDAMENTALS = """
     SELECT s.stock_id,
@@ -84,32 +99,32 @@ Q_SNAPSHOTS = """
 
 
 # ---------------------------------------------------------------------------
-# TRANSFORM - small value converters shared by the builders below.
+# TRANSFORM - tiny value converters used by the build functions below.
 # ---------------------------------------------------------------------------
-def to_float(value) -> float | None:
-    """Convert a MySQL DECIMAL (a decimal.Decimal) to a plain float.
+def to_float(value):
+    """Turn a MySQL DECIMAL into a plain float (or None).
 
-    MongoDB stores numbers natively, and float() keeps the demo simple. This
-    is a read model, so we accept the tiny loss of DECIMAL precision here.
+    MongoDB stores numbers fine; using float keeps this demo simple. This is
+    a copy of the MySQL data, so losing a little DECIMAL precision is fine.
     """
     if value is None:
         return None
     return float(value)
 
 
-def to_text(value) -> str | None:
-    """Convert a value (e.g. a DATE) to text, or None.
+def to_text(value):
+    """Turn a value (such as a DATE) into text (or None).
 
-    PyMongo cannot store a datetime.date directly, so DATE columns become
-    'YYYY-MM-DD' strings.
+    PyMongo cannot store a date object directly, so dates become strings
+    such as "2025-03-14".
     """
     if value is None:
         return None
     return str(value)
 
 
-def build_stock_documents(rows: list[dict]) -> list[dict]:
-    """Turn stock + sector rows into `stock_fundamentals` documents."""
+def build_stock_documents(rows):
+    """Turn stock + sector rows into stock_fundamentals documents."""
     documents = []
     for row in rows:
         documents.append({
@@ -126,8 +141,8 @@ def build_stock_documents(rows: list[dict]) -> list[dict]:
     return documents
 
 
-def build_portfolio_documents(rows: list[dict]) -> list[dict]:
-    """Turn portfolio + owner rows into `portfolios` documents."""
+def build_portfolio_documents(rows):
+    """Turn portfolio + owner rows into portfolios documents."""
     documents = []
     for row in rows:
         documents.append({
@@ -140,8 +155,8 @@ def build_portfolio_documents(rows: list[dict]) -> list[dict]:
     return documents
 
 
-def build_transaction_documents(rows: list[dict]) -> list[dict]:
-    """Turn transaction + stock rows into `transactions` documents."""
+def build_transaction_documents(rows):
+    """Turn transaction + stock rows into transactions documents."""
     documents = []
     for row in rows:
         documents.append({
@@ -157,8 +172,8 @@ def build_transaction_documents(rows: list[dict]) -> list[dict]:
     return documents
 
 
-def build_snapshot_documents(rows: list[dict]) -> list[dict]:
-    """Turn snapshot rows into `portfolio_snapshots` documents."""
+def build_snapshot_documents(rows):
+    """Turn snapshot rows into portfolio_snapshots documents."""
     documents = []
     for row in rows:
         documents.append({
@@ -175,66 +190,37 @@ def build_snapshot_documents(rows: list[dict]) -> list[dict]:
 # ---------------------------------------------------------------------------
 # LOAD
 # ---------------------------------------------------------------------------
-def load_collection(database, name: str, documents: list[dict]) -> int:
-    """Replace one collection's contents and return its document count.
+def load_collection(database, name, documents):
+    """Replace one collection's documents, and return how many were stored.
 
-    We delete-then-insert so running the ETL twice gives the same result as
-    running it once (no duplicate documents).
+    We delete everything first and then insert, so running the ETL twice
+    gives exactly the same result as running it once (no duplicates).
     """
-    collection = mongo_db.get_collection(name, database=database.name)
-    mongo_db.delete_many(collection, {})
+    collection = database[name]
+    collection.delete_many({})
     if documents:
-        mongo_db.insert_many(collection, documents)
-    return mongo_db.count(collection)
+        collection.insert_many(documents)
+    return collection.count_documents({})
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description="Copy the FinWise read model from MySQL into MongoDB.")
-    parser.add_argument("--mysql-db", default=None,
-                        help="MySQL database to read "
-                             "(default: FINWISE_DB_NAME).")
-    parser.add_argument("--mongo-db", default=None,
-                        help="MongoDB database to write "
-                             "(default: FINWISE_MONGO_DB).")
-    parser.add_argument("--yes", action="store_true",
-                        help="Skip the confirmation prompt.")
-    args = parser.parse_args(argv)
-
+def main():
+    """Run the ETL: read MySQL, then write the MongoDB collections."""
     if not mongo_db.server_available():
-        print("Cannot reach MongoDB. Is mongod running? "
-              "See docs/mongodb_module.md for setup steps.")
+        print("Cannot reach MongoDB. Is mongod running?")
+        print("See docs/mongodb_module.md for setup steps.")
         return 1
-
-    target = mongo_db.get_database(args.mongo_db)
-    mysql_name = args.mysql_db or db.DEFAULTS["FINWISE_DB_NAME"]
 
     print("=" * 62)
     print("FinWise MongoDB ETL  (MySQL -> MongoDB)")
     print("=" * 62)
-    print(f"MySQL source   : {mysql_name}")
-    print(f"MongoDB target : {target.name}")
-    print()
     print("!! WARNING: this REPLACES the documents in these collections:")
     print("!!   " + ", ".join(mongo_db.COLLECTIONS))
     print("!! MySQL is only read - it is never modified.")
     print()
 
-    if not args.yes:
-        reply = input(f"Type the MongoDB database name '{target.name}' "
-                      "to continue: ")
-        if reply.strip() != target.name:
-            print("Aborted - nothing was changed.")
-            return 1
-
-    # EXTRACT: read everything from MySQL first, so a read error cannot
-    # leave the MongoDB collections half-updated.
-    try:
-        conn = db.get_connection(args.mysql_db)
-    except Exception as exc:
-        print(f"Could not connect to MySQL: {exc}")
-        print("Hint: start MySQL and configure .env (see README).")
-        return 1
+    # ---- Extract: read everything from MySQL first ------------------------
+    # Reading first means a MySQL error cannot leave MongoDB half-updated.
+    conn = db.get_connection()
     try:
         stock_rows = db.fetch_all(conn, Q_STOCK_FUNDAMENTALS)
         portfolio_rows = db.fetch_all(conn, Q_PORTFOLIOS)
@@ -243,26 +229,29 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         conn.close()
 
-    # TRANSFORM + LOAD, one collection at a time.
-    counts = {
-        "stock_fundamentals": load_collection(
-            target, "stock_fundamentals", build_stock_documents(stock_rows)),
-        "portfolios": load_collection(
-            target, "portfolios", build_portfolio_documents(portfolio_rows)),
-        "transactions": load_collection(
-            target, "transactions",
-            build_transaction_documents(transaction_rows)),
-        "portfolio_snapshots": load_collection(
-            target, "portfolio_snapshots",
-            build_snapshot_documents(snapshot_rows)),
-    }
+    # ---- Transform + Load: one collection at a time -----------------------
+    database = mongo_db.get_database()
+    print("Loaded into MongoDB database '" + database.name + "':")
 
-    print(f"Loaded into MongoDB database '{target.name}':")
-    for name, total in counts.items():
-        print(f"  {name}: {total} document(s)")
+    stored = load_collection(database, "stock_fundamentals",
+                             build_stock_documents(stock_rows))
+    print("  stock_fundamentals: " + str(stored) + " document(s)")
+
+    stored = load_collection(database, "portfolios",
+                             build_portfolio_documents(portfolio_rows))
+    print("  portfolios: " + str(stored) + " document(s)")
+
+    stored = load_collection(database, "transactions",
+                             build_transaction_documents(transaction_rows))
+    print("  transactions: " + str(stored) + " document(s)")
+
+    stored = load_collection(database, "portfolio_snapshots",
+                             build_snapshot_documents(snapshot_rows))
+    print("  portfolio_snapshots: " + str(stored) + " document(s)")
+
     print()
     print("Sample data only - not real financial information.")
-    print("Next step:  python python/mongo_demo.py")
+    print("Next step:  python mongodb/mongo_demo.py")
     return 0
 
 

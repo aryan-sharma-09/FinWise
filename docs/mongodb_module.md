@@ -1,38 +1,47 @@
 # MongoDB module (Person 3 - MongoDB and Data Engineering)
 
 A small, beginner-friendly **document database** component for FinWise. It
-keeps a **read model** of the project's data in MongoDB so we can demonstrate
-document CRUD and simple aggregation queries alongside the relational work.
+keeps a copy of the project's data in MongoDB so we can show document
+queries, one aggregation, and CRUD alongside the relational work.
 
 > **Educational disclaimer.** Every stock, price, portfolio, transaction, and
 > valuation here is **synthetic sample data**. This is a college project, not
 > a real trading system, and nothing here is financial advice.
 
+## The two parts
+
+Person 3's work lives in two sibling folders:
+
+| Folder | Part | What it does |
+| --- | --- | --- |
+| `mongodb/` | MongoDB | Connection helper + a read-only tour of the collections. |
+| `etl/` | Data engineering | Copies the data out of MySQL into MongoDB. |
+
 ## Why MongoDB next to MySQL?
 
 MySQL (Member 1's seven tables) is the **single source of truth**: it holds
 the constraints, the stored procedures, and the audit trail. MongoDB does not
-replace any of that. It is a place to practise a *second* data model, and it
-is rebuilt from MySQL whenever we want.
+replace any of that. It is a second data model to practise with, and it is
+filled from MySQL whenever we want.
 
 ```
-MySQL  (source of truth)             MongoDB  (read model)
+MySQL  (source of truth)            MongoDB  (the collections)
   7 tables, views, procedures  --ETL-->  stock_fundamentals
-  read-only                    <--      portfolios
+  read-only                    <--       portfolios
                                          transactions
                                          portfolio_snapshots
 ```
 
-The ETL script only **reads** MySQL and only **writes** MongoDB. Nothing is
-ever written back, so MySQL cannot be corrupted by this module.
+The ETL only **reads** MySQL and only **writes** MongoDB. Nothing is ever
+written back, so this module cannot corrupt MySQL.
 
 ## Files
 
 | File | Purpose |
 | --- | --- |
-| `python/mongo_db.py` | Connection + small CRUD helpers over PyMongo. |
-| `python/load_mongo.py` | The ETL: reads MySQL, writes the MongoDB read model. |
-| `python/mongo_demo.py` | A few read-only queries plus a small CRUD demo. |
+| `mongodb/mongo_db.py` | Connection helper: reads the settings, returns a MongoDB database. |
+| `mongodb/mongo_demo.py` | Read-only find queries, one aggregation, and a CRUD demo. |
+| `etl/load_mongo.py` | The ETL: reads MySQL, writes the MongoDB collections. |
 | `tests/test_mongo_basic.py` | Basic CRUD + aggregation tests (skip if no server). |
 | `docs/mongodb_module.md` | This document. |
 
@@ -65,13 +74,13 @@ A couple of deliberate simplifications to keep the code easy to read:
 
 2. Make sure the FinWise MySQL database is loaded and a MongoDB server is
    running locally (`mongod`, listening on `127.0.0.1:27017` by default).
-   Check with: `mongosh --eval "db.runCommand({ping:1})"`.
+   Check it with: `mongosh --eval "db.runCommand({ping:1})"`.
 
-3. Build the read model, then explore it:
+3. Build the collections, then explore them:
 
    ```bash
-   python python/load_mongo.py --yes   # MySQL -> MongoDB
-   python python/mongo_demo.py         # read-only queries + CRUD demo
+   python etl/load_mongo.py       # MySQL -> MongoDB
+   python mongodb/mongo_demo.py   # read-only queries + CRUD demo
    ```
 
 ## Configuration
@@ -82,7 +91,6 @@ Optional - sensible defaults are built in. Override them in `.env`:
 | --- | --- | --- |
 | `FINWISE_MONGO_URI` | `mongodb://127.0.0.1:27017` | Server to connect to. |
 | `FINWISE_MONGO_DB` | `finwise_mongo` | Database the ETL writes and the demo reads. |
-| `FINWISE_MONGO_TIMEOUT_MS` | `2000` | How long to wait for the server. |
 | `FINWISE_MONGO_TEST_DB` | `finwise_test_mongo` | Throwaway database used by the tests. |
 
 Reads of MySQL use the existing `FINWISE_DB_*` settings from `python/db.py`.
