@@ -7,3 +7,7 @@ numpy
 pandas
 scipy
 pytest
+
+# MongoDB module (Person 3). PyMongo is imported lazily by python/mongo_db.py,
+# so the rest of the project keeps working even if it is not installed.
+pymongo>=4.6
