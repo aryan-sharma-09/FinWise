@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, Optional, Sequence
+from typing import Any, Optional
 
 # ---------------------------------------------------------------------------
 # Optional dependency: a missing pymongo must not stop this module (or the
@@ -137,7 +137,7 @@ def insert_one(collection, document: dict) -> Any:
     return collection.insert_one(document).inserted_id
 
 
-def insert_many(collection, documents: Sequence[dict]) -> list:
+def insert_many(collection, documents: list[dict]) -> list:
     """Insert several documents and return their new _ids."""
     return collection.insert_many(list(documents)).inserted_ids
 
@@ -180,6 +180,6 @@ def delete_many(collection, query: dict):
     return collection.delete_many(query)
 
 
-def aggregate(collection, pipeline: Sequence[dict]) -> list[dict]:
+def aggregate(collection, pipeline: list[dict]) -> list[dict]:
     """Run an aggregation pipeline and return the result rows."""
     return list(collection.aggregate(list(pipeline)))

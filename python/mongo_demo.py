@@ -117,27 +117,32 @@ def show_trades_per_ticker(database) -> None:
 def demo_crud(database) -> None:
     """Insert, read, update and delete one document in a scratch collection.
 
-    We use a separate 'demo_scratch' collection and empty it at the end, so
-    the real read-model collections are never touched.
+    We use a separate 'demo_scratch' collection and drop it again at the end
+    with a try/finally, so it is removed even if the demo hits an error. The
+    four real read-model collections are never touched and nothing is left
+    behind.
     """
     print()
     print("CRUD demo (scratch collection 'demo_scratch')")
     print("-" * 44)
     scratch = database["demo_scratch"]
-    mongo_db.delete_many(scratch, {})
+    try:
+        new_id = mongo_db.insert_one(scratch, {"name": "demo", "value": 10})
+        print(f"  insert -> new _id = {new_id}")
 
-    new_id = mongo_db.insert_one(scratch, {"name": "demo", "value": 10})
-    print(f"  insert -> new _id = {new_id}")
+        document = mongo_db.find_one(scratch, {"_id": new_id})
+        print(f"  read   -> {document}")
 
-    document = mongo_db.find_one(scratch, {"_id": new_id})
-    print(f"  read   -> {document}")
+        mongo_db.update_one(scratch, {"_id": new_id}, {"value": 20})
+        document = mongo_db.find_one(scratch, {"_id": new_id})
+        print(f"  update -> value = {document['value']}")
 
-    mongo_db.update_one(scratch, {"_id": new_id}, {"value": 20})
-    document = mongo_db.find_one(scratch, {"_id": new_id})
-    print(f"  update -> value = {document['value']}")
-
-    mongo_db.delete_one(scratch, {"_id": new_id})
-    print(f"  delete -> documents left = {mongo_db.count(scratch)}")
+        mongo_db.delete_one(scratch, {"_id": new_id})
+        print(f"  delete -> documents left = {mongo_db.count(scratch)}")
+    finally:
+        # drop_collection removes the collection itself, not just its
+        # documents, so no empty 'demo_scratch' is left in the database.
+        database.drop_collection("demo_scratch")
 
 
 def main() -> int:
