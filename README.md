@@ -91,11 +91,7 @@ FinWise/
 │   ├── db.py                  ← connection helper + procedure wrappers
 │   ├── load_database.py       ← cross-platform loader for the SQL scripts
 │   ├── crud_examples.py       ← menu-driven CRUD demo
-│   ├── verify_setup.py        ← health check for your installation
-│   ├── mongo_db.py            ← MongoDB connection + CRUD helpers
-│   ├── load_mongo.py          ← read-only MySQL → MongoDB ETL
-│   ├── mongo_demo.py          ← MongoDB CRUD + aggregation demo
-│   └── verify_mongo.py        ← MongoDB health check
+│   └── verify_setup.py        ← health check for your installation
 ├── tests/
 │   ├── conftest.py
 │   ├── test_schema.py
@@ -106,8 +102,7 @@ FinWise/
 └── docs/
     ├── data_dictionary.md
     ├── database_contract.md   ← DRAFT: requires team review
-    ├── er_diagram.mmd
-    └── mongodb_module.md      ← MongoDB read model (Member 3)
+    └── er_diagram.mmd
 ```
 
 ## Setup
@@ -236,34 +231,6 @@ functions, CTEs). Run them anywhere you can run SQL, for example:
 ```bash
 mysql -u root -p finwise < sql/05_analytics_queries.sql
 ```
-
-## MongoDB module (Member 3) — semi-structured read model
-
-FinWise also ships a **MongoDB read model** of the data: a denormalized,
-semi-structured NoSQL mirror with CRUD helpers and advanced aggregation
-pipelines. **MySQL stays the single source of truth** — the ETL only reads
-from MySQL and never writes back.
-
-- Collections: `stock_fundamentals` (embedded sector + fundamentals
-  sub-documents), `portfolios` (embedded `holdings[]` array), `transactions`,
-  and `portfolio_snapshots`.
-- Five aggregation pipelines mirror the SQL analytics: `$unwind` + `$lookup`
-  (+`$group`), `$setWindowFields` (`$rank` / `$shift` / running `$sum`), and
-  `$facet` + `$bucket`.
-- Requires **MongoDB 5.0+** (for `$setWindowFields`) and `pymongo` (in
-  `requirements.txt`).
-
-```bash
-python python/load_mongo.py --yes    # read-only ETL from MySQL into MongoDB
-python python/verify_mongo.py        # health check
-python python/mongo_demo.py          # CRUD + aggregation demo
-```
-
-Configure the connection with `FINWISE_MONGO_URI` / `FINWISE_MONGO_DB` in
-`.env` (local `mongodb://127.0.0.1:27017` or a MongoDB Atlas `mongodb+srv://`
-string). The MongoDB tests use a disposable database whose name contains
-`"test"` and skip cleanly when MongoDB is unavailable. See
-[`docs/mongodb_module.md`](docs/mongodb_module.md) for the full design.
 
 ## Security notes
 
