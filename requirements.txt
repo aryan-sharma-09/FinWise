@@ -7,6 +7,8 @@ numpy
 pandas
 scipy
 pytest
+plotly>=5.20.0
+streamlit>=1.35.0
 
 # MongoDB module (Person 3). PyMongo is only used by the mongodb/ and etl/
 # scripts, so the MySQL side of the project works without it.
