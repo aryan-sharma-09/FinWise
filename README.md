@@ -269,3 +269,15 @@ mysql -u root -p finwise < sql/05_analytics_queries.sql
   see `docs/database_contract.md`.
 - No authentication, live market APIs, cash balances, or trading simulation
   — intentionally out of scope for this phase.
+
+## Business Intelligence & Analytics
+
+The portfolio management and risk metrics are visualized using an interactive Power BI dashboard:
+
+![FinWise Dashboard Overview](dashboards/dashboard_overview.png)
+
+### Key Analytics Modules:
+- **Concentration Analysis**: Herfindahl-Hirschman Index (HHI) score monitoring.
+- **Exposure Breakdown**: Real-time sector asset allocation.
+- **Valuation Tracking**: Historical portfolio value progression over snapshot dates.
+- **Position Ledger**: Granular unrealized P/L and fundamentals breakdown per holding.
