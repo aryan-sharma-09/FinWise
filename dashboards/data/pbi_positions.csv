@@ -1,0 +1,39 @@
+holding_id,portfolio_id,portfolio_name,user_id,username,stock_id,ticker_symbol,company_name,sector_name,quantity,average_cost_per_unit,current_price,cost_basis,market_value,unrealized_pl,pl_percent,portfolio_total_value,portfolio_weight_percent
+11,2,Dividend Income,1,aarav_mehta,9,JNJ,Johnson and Johnson,Health Care,40.0000,154.337500,168.20,6173.50,6728.00,554.50,8.98,35722.500000,18.83
+12,2,Dividend Income,1,aarav_mehta,17,KO,Coca-Cola Company,Consumer Staples,70.0000,62.100000,68.55,4347.00,4798.50,451.50,10.39,35722.500000,13.43
+13,2,Dividend Income,1,aarav_mehta,18,PG,Procter and Gamble Co.,Consumer Staples,45.0000,158.900000,172.30,7150.50,7753.50,603.00,8.43,35722.500000,21.70
+14,2,Dividend Income,1,aarav_mehta,20,XOM,Exxon Mobil Corporation,Energy,40.0000,99.800000,118.65,3992.00,4746.00,754.00,18.89,35722.500000,13.29
+15,2,Dividend Income,1,aarav_mehta,25,NEE,NextEra Energy Inc.,Utilities,60.0000,71.900000,83.20,4314.00,4992.00,678.00,15.72,35722.500000,13.97
+16,2,Dividend Income,1,aarav_mehta,26,DUK,Duke Energy Corporation,Utilities,55.0000,108.450000,121.90,5964.75,6704.50,739.75,12.40,35722.500000,18.77
+1,1,Long-Term Growth,1,aarav_mehta,1,AAPL,Apple Inc.,Technology,55.0000,217.618182,245.50,11969.00,13502.50,1533.50,12.81,72437.100000,18.64
+2,1,Long-Term Growth,1,aarav_mehta,2,MSFT,Microsoft Corporation,Technology,25.0000,415.600000,470.25,10390.00,11756.25,1366.25,13.15,72437.100000,16.23
+3,1,Long-Term Growth,1,aarav_mehta,3,NVDA,NVIDIA Corporation,Technology,80.0000,124.275000,138.75,9942.00,11100.00,1158.00,11.65,72437.100000,15.32
+4,1,Long-Term Growth,1,aarav_mehta,4,GOOGL,Alphabet Inc.,Technology,30.0000,178.250000,205.40,5347.50,6162.00,814.50,15.23,72437.100000,8.51
+5,1,Long-Term Growth,1,aarav_mehta,12,LLY,Eli Lilly and Company,Health Care,6.0000,792.500000,942.60,4755.00,5655.60,900.60,18.94,72437.100000,7.81
+6,1,Long-Term Growth,1,aarav_mehta,13,AMZN,Amazon.com Inc.,Consumer Discretionary,30.0000,204.166667,228.90,6125.00,6867.00,742.00,12.11,72437.100000,9.48
+7,1,Long-Term Growth,1,aarav_mehta,14,TSLA,Tesla Inc.,Consumer Discretionary,15.0000,348.200000,415.35,5223.00,6230.25,1007.25,19.28,72437.100000,8.60
+8,1,Long-Term Growth,1,aarav_mehta,19,WMT,Walmart Inc.,Consumer Staples,35.0000,86.750000,98.40,3036.25,3444.00,407.75,13.43,72437.100000,4.75
+9,1,Long-Term Growth,1,aarav_mehta,20,XOM,Exxon Mobil Corporation,Energy,30.0000,104.900000,118.65,3147.00,3559.50,412.50,13.11,72437.100000,4.91
+10,1,Long-Term Growth,1,aarav_mehta,25,NEE,NextEra Energy Inc.,Utilities,50.0000,76.350000,83.20,3817.50,4160.00,342.50,8.97,72437.100000,5.74
+17,3,Tech Focus,1,aarav_mehta,2,MSFT,Microsoft Corporation,Technology,8.0000,428.900000,470.25,3431.20,3762.00,330.80,9.64,12077.150000,31.15
+18,3,Tech Focus,1,aarav_mehta,3,NVDA,NVIDIA Corporation,Technology,25.0000,128.400000,138.75,3210.00,3468.75,258.75,8.06,12077.150000,28.72
+19,3,Tech Focus,1,aarav_mehta,5,META,Meta Platforms Inc.,Technology,8.0000,572.300000,605.80,4578.40,4846.40,268.00,5.85,12077.150000,40.13
+20,4,Balanced Core,2,priya_patel,1,AAPL,Apple Inc.,Technology,30.0000,219.750000,245.50,6592.50,7365.00,772.50,11.72,41305.700000,17.83
+21,4,Balanced Core,2,priya_patel,6,JPM,JPMorgan Chase and Co.,Financials,25.0000,238.400000,262.30,5960.00,6557.50,597.50,10.03,41305.700000,15.88
+22,4,Balanced Core,2,priya_patel,7,V,Visa Inc.,Financials,15.0000,312.850000,348.60,4692.75,5229.00,536.25,11.43,41305.700000,12.66
+23,4,Balanced Core,2,priya_patel,10,UNH,UnitedHealth Group Inc.,Health Care,8.0000,548.200000,585.40,4385.60,4683.20,297.60,6.79,41305.700000,11.34
+24,4,Balanced Core,2,priya_patel,11,PFE,Pfizer Inc.,Health Care,80.0000,29.850000,34.10,2388.00,2728.00,340.00,14.24,41305.700000,6.60
+25,4,Balanced Core,2,priya_patel,17,KO,Coca-Cola Company,Consumer Staples,100.0000,64.300000,68.55,6430.00,6855.00,425.00,6.61,41305.700000,16.60
+26,4,Balanced Core,2,priya_patel,19,WMT,Walmart Inc.,Consumer Staples,40.0000,91.200000,98.40,3648.00,3936.00,288.00,7.89,41305.700000,9.53
+27,4,Balanced Core,2,priya_patel,23,CAT,Caterpillar Inc.,Industrials,10.0000,352.600000,395.20,3526.00,3952.00,426.00,12.08,41305.700000,9.57
+28,5,Small Explorations,2,priya_patel,14,TSLA,Tesla Inc.,Consumer Discretionary,10.0000,388.750000,415.35,3887.50,4153.50,266.00,6.84,14752.500000,28.15
+29,5,Small Explorations,2,priya_patel,15,NKE,NIKE Inc.,Consumer Discretionary,60.0000,84.200000,78.45,5052.00,4707.00,-345.00,-6.83,14752.500000,31.91
+30,5,Small Explorations,2,priya_patel,16,HD,Home Depot Inc.,Consumer Discretionary,15.0000,368.900000,392.80,5533.50,5892.00,358.50,6.48,14752.500000,39.94
+31,6,Index-Like Starter,3,diego_ramirez,4,GOOGL,Alphabet Inc.,Technology,18.0000,191.300000,205.40,3443.40,3697.20,253.80,7.37,16572.200000,22.31
+32,6,Index-Like Starter,3,diego_ramirez,6,JPM,JPMorgan Chase and Co.,Financials,20.0000,249.600000,262.30,4992.00,5246.00,254.00,5.09,16572.200000,31.66
+33,6,Index-Like Starter,3,diego_ramirez,18,PG,Procter and Gamble Co.,Consumer Staples,30.0000,165.750000,172.30,4972.50,5169.00,196.50,3.95,16572.200000,31.19
+34,6,Index-Like Starter,3,diego_ramirez,19,WMT,Walmart Inc.,Consumer Staples,25.0000,89.450000,98.40,2236.25,2460.00,223.75,10.01,16572.200000,14.84
+35,7,Energy and Industrials,4,sara_khan,20,XOM,Exxon Mobil Corporation,Energy,45.0000,108.300000,118.65,4873.50,5339.25,465.75,9.56,19401.000000,27.52
+36,7,Energy and Industrials,4,sara_khan,21,CVX,Chevron Corporation,Energy,30.0000,152.800000,162.40,4584.00,4872.00,288.00,6.28,19401.000000,25.11
+37,7,Energy and Industrials,4,sara_khan,22,BA,Boeing Company,Industrials,20.0000,149.750000,178.55,2995.00,3571.00,576.00,19.23,19401.000000,18.41
+38,7,Energy and Industrials,4,sara_khan,24,HON,Honeywell International Inc.,Industrials,25.0000,210.400000,224.75,5260.00,5618.75,358.75,6.82,19401.000000,28.96
