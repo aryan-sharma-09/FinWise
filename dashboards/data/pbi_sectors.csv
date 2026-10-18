@@ -1,0 +1,23 @@
+portfolio_id,portfolio_name,user_id,sector_name,sector_value,portfolio_total_value,sector_weight_percent
+1,Long-Term Growth,1,Consumer Discretionary,13097.250000,72437.100000,18.08
+1,Long-Term Growth,1,Consumer Staples,3444.000000,72437.100000,4.75
+1,Long-Term Growth,1,Energy,3559.500000,72437.100000,4.91
+1,Long-Term Growth,1,Health Care,5655.600000,72437.100000,7.81
+1,Long-Term Growth,1,Technology,42520.750000,72437.100000,58.70
+1,Long-Term Growth,1,Utilities,4160.000000,72437.100000,5.74
+2,Dividend Income,1,Consumer Staples,12552.000000,35722.500000,35.14
+2,Dividend Income,1,Energy,4746.000000,35722.500000,13.29
+2,Dividend Income,1,Health Care,6728.000000,35722.500000,18.83
+2,Dividend Income,1,Utilities,11696.500000,35722.500000,32.74
+3,Tech Focus,1,Technology,12077.150000,12077.150000,100.00
+4,Balanced Core,2,Consumer Staples,10791.000000,41305.700000,26.12
+4,Balanced Core,2,Financials,11786.500000,41305.700000,28.53
+4,Balanced Core,2,Health Care,7411.200000,41305.700000,17.94
+4,Balanced Core,2,Industrials,3952.000000,41305.700000,9.57
+4,Balanced Core,2,Technology,7365.000000,41305.700000,17.83
+5,Small Explorations,2,Consumer Discretionary,14752.500000,14752.500000,100.00
+6,Index-Like Starter,3,Consumer Staples,7629.000000,16572.200000,46.03
+6,Index-Like Starter,3,Financials,5246.000000,16572.200000,31.66
+6,Index-Like Starter,3,Technology,3697.200000,16572.200000,22.31
+7,Energy and Industrials,4,Energy,10211.250000,19401.000000,52.63
+7,Energy and Industrials,4,Industrials,9189.750000,19401.000000,47.37

@@ -1,0 +1,27 @@
+ticker,company_name,price,pe_ratio,dividend_yield
+AAPL,Apple Inc.,245.50,28.40,
+MSFT,Microsoft Corporation,470.25,33.10,0.75
+NVDA,NVIDIA Corporation,138.75,45.20,
+GOOGL,Alphabet Inc.,205.40,24.60,
+META,Meta Platforms Inc.,605.80,22.30,
+JPM,JPMorgan Chase and Co.,262.30,14.80,2.05
+V,Visa Inc.,348.60,31.20,0.72
+BAC,Bank of America Corp.,48.75,13.50,2.30
+JNJ,Johnson and Johnson,168.20,15.60,3.05
+UNH,UnitedHealth Group Inc.,585.40,17.40,1.55
+PFE,Pfizer Inc.,34.10,,5.85
+LLY,Eli Lilly and Company,942.60,62.50,0.65
+AMZN,Amazon.com Inc.,228.90,38.20,
+TSLA,Tesla Inc.,415.35,78.40,
+NKE,NIKE Inc.,78.45,19.80,1.95
+HD,Home Depot Inc.,392.80,24.10,2.15
+KO,Coca-Cola Company,68.55,24.90,2.85
+PG,Procter and Gamble Co.,172.30,26.10,2.45
+WMT,Walmart Inc.,98.40,38.60,0.90
+XOM,Exxon Mobil Corporation,118.65,13.20,3.25
+CVX,Chevron Corporation,162.40,14.60,4.05
+BA,Boeing Company,178.55,,
+CAT,Caterpillar Inc.,395.20,16.90,1.45
+HON,Honeywell International Inc.,224.75,23.40,2.10
+NEE,NextEra Energy Inc.,83.20,21.70,2.95
+DUK,Duke Energy Corporation,121.90,19.30,3.65
